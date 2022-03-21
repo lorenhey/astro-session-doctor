@@ -1,0 +1,25 @@
+Metadata-Version: 2.4
+Name: astro-session-doctor
+Version: 0.1.0
+Summary: Autopsy and diagnose astronomical acquisition sessions
+Author-email: Loren <lorenhey@example.com>
+License: MIT
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: astropy>=6.0.0
+Requires-Dist: photutils>=1.11.0
+Requires-Dist: numpy>=1.24.0
+Requires-Dist: scipy>=1.10.0
+Requires-Dist: pandas>=2.0.0
+Requires-Dist: pydantic>=2.0.0
+Requires-Dist: typer>=0.9.0
+Requires-Dist: rich>=13.0.0
+Requires-Dist: streamlit>=1.30.0
+Requires-Dist: plotly>=5.18.0
+Requires-Dist: streamlit-plotly-events>=0.0.6
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0.0; extra == "dev"
+Requires-Dist: black>=23.0.0; extra == "dev"
+Requires-Dist: isort>=5.12.0; extra == "dev"
+Requires-Dist: mypy>=1.0.0; extra == "dev"

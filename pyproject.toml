@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "astro-session-doctor"
+version = "0.1.0"
+description = "Autopsy and diagnose astronomical acquisition sessions"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Loren", email = "lorenhey@example.com"}
+]
+dependencies = [
+    "astropy>=6.0.0",
+    "photutils>=1.11.0",
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+    "pandas>=2.0.0",
+    "pydantic>=2.0.0",
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+    "streamlit>=1.30.0",
+    "plotly>=5.18.0",
+    "streamlit-plotly-events>=0.0.6",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "mypy>=1.0.0",
+]
+
+[project.scripts]
+asd = "astro_session_doctor.cli.main:app"
+astro-session-doctor = "astro_session_doctor.cli.main:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+

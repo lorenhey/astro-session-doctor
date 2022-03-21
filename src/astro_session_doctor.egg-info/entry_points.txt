@@ -1,0 +1,3 @@
+[console_scripts]
+asd = astro_session_doctor.cli.main:app
+astro-session-doctor = astro_session_doctor.cli.main:app
