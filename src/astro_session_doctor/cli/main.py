@@ -23,6 +23,24 @@ def analyze(session_dir: str):
         if fwhms:
             median_fwhm = sum(fwhms) / len(fwhms)
             console.print(f"Median FWHM: [yellow]{median_fwhm:.2f} px[/yellow]")
+            
+    from ..engine.analyzer import Analyzer
+    analyzer = Analyzer(session)
+    findings = analyzer.analyze()
+    
+    if findings:
+        console.print("\n[bold red]Findings:[/bold red]")
+        for f in findings:
+            console.print(f"\n[bold]{f.title}[/bold] - [yellow]{f.severity}[/yellow] ({f.time_range})")
+            console.print(f"Affected frames: {f.affected_frames}")
+            console.print("Evidence:")
+            for e in f.evidence:
+                console.print(f"  - {e}")
+            console.print("Possible Causes:")
+            for c in f.possible_causes:
+                console.print(f"  - {c}")
+    else:
+        console.print("\n[bold green]No major issues found.[/bold green]")
 
 import os
 import subprocess
@@ -56,7 +74,7 @@ def demo():
     light_count = sum(1 for f in session.frames if f.frame_type == "light")
     console.print(f"\n[green]Analysis Complete![/green] Found {len(session.frames)} frames.")
     
-    from .engine.analyzer import Analyzer
+    from ..engine.analyzer import Analyzer
     analyzer = Analyzer(session)
     findings = analyzer.analyze()
     
