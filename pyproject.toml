@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "astro-session-doctor"
-version = "0.1.0"
-description = "Autopsy and diagnose astronomical acquisition sessions"
+version = "2.0.0"
+description = "Interactive Astronomical Session Autopsy, PSF Timeline, Guiding RMS Diagnosis & QA Workbench"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}

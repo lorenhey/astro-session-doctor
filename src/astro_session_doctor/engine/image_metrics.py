@@ -59,10 +59,12 @@ class ImageMetricsCalculator:
                     # Fit 2D Gaussian to each star to get accurate FWHM and eccentricity
                     fitter = fitting.LevMarLSQFitter()
                     box_size = 11
+                    x_col = 'x_centroid' if 'x_centroid' in sources.colnames else 'xcentroid'
+                    y_col = 'y_centroid' if 'y_centroid' in sources.colnames else 'ycentroid'
                     
                     for row in sources:
-                        x_cen = int(row['xcentroid'])
-                        y_cen = int(row['ycentroid'])
+                        x_cen = int(row[x_col])
+                        y_cen = int(row[y_col])
                         
                         y_min = max(0, y_cen - box_size)
                         y_max = min(data.shape[0], y_cen + box_size + 1)

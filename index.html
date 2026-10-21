@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AstroSessionDoctor (ASD) v2.0.0 — Astronomical Session Autopsy & QA Workbench</title>
+  <meta name="description" content="Client-side astronomical acquisition session autopsy, PSF/FWHM timeline, PHD2 guiding RMS diagnosis, and optical quality assurance workbench.">
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- KaTeX for beautiful astronomical equations -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-icon">🩺✨</span>
+      <div>
+        <div style="display: flex; align-items: center;">
+          <span class="brand-title">AstroSessionDoctor</span>
+          <span class="brand-version">v2.0.0</span>
+        </div>
+        <div style="font-size: 0.76rem; color: var(--text-dim); font-weight: 500;">
+          Astronomical Session Autopsy &amp; Quality Assurance Workbench
+        </div>
+      </div>
+    </div>
+
+    <div class="header-controls">
+      <div class="session-selector-group">
+        <label for="sessionSelect" class="selector-label">Acquisition Session:</label>
+        <select id="sessionSelect" class="session-select"></select>
+      </div>
+
+      <div class="btn-group">
+        <button id="btnExportJson" class="btn" title="Export autopsy report and metrics in JSON format">
+          <span>📥</span> JSON
+        </button>
+        <button id="btnExportCsv" class="btn" title="Export subframe metrics in CSV format">
+          <span>📊</span> CSV
+        </button>
+        <button id="btnCopySummary" class="btn btn-primary" title="Copy clinical autopsy summary to clipboard">
+          <span>📋</span> Copy Report
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="app-container">
+
+    <!-- Top Autopsy Verdict & Target Banner -->
+    <section class="autopsy-banner">
+      <div class="target-meta">
+        <div class="target-heading-row">
+          <h1 id="sessionTitle" class="target-title">NGC 6960 (Western Veil)</h1>
+          <span class="target-subtitle">Forensic Deep-Sky Session Autopsy</span>
+        </div>
+        <div id="sessionInfo" class="target-info">
+          <!-- Populated by JavaScript -->
+        </div>
+      </div>
+
+      <div class="autopsy-verdict-box">
+        <div class="verdict-score-ring">
+          <div id="autopsyScoreVal" class="score-num">--</div>
+          <div class="score-label">Autopsy Score</div>
+        </div>
+
+        <div class="verdict-status">
+          <div id="verdictBadge" class="verdict-badge">ANALYZING...</div>
+          <div class="subscores-compact">
+            <div class="subscore-item" id="scoreSeeing" title="Seeing & Focus Quality (max 25 pts)">
+              <span>Focus:</span>
+              <div class="subscore-bar"><div class="subscore-fill" style="width: 0%;"></div></div>
+              <span class="subscore-val">--/25</span>
+            </div>
+            <div class="subscore-item" id="scoreGuiding" title="Mount Guiding & Tracking Stability (max 25 pts)">
+              <span>Guide:</span>
+              <div class="subscore-bar"><div class="subscore-fill" style="width: 0%;"></div></div>
+              <span class="subscore-val">--/25</span>
+            </div>
+            <div class="subscore-item" id="scoreTilt" title="Sensor Plane Tilt & Collimation (max 25 pts)">
+              <span>Tilt:</span>
+              <div class="subscore-bar"><div class="subscore-fill" style="width: 0%;"></div></div>
+              <span class="subscore-val">--/25</span>
+            </div>
+            <div class="subscore-item" id="scoreSky" title="Sky Background & Transparency (max 25 pts)">
+              <span>Sky:</span>
+              <div class="subscore-bar"><div class="subscore-fill" style="width: 0%;"></div></div>
+              <span class="subscore-val">--/25</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- KPI Metric Cards Grid -->
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Median FWHM</div>
+        <div class="kpi-value-row">
+          <span id="kpiFwhm" class="kpi-value">--</span>
+          <span id="kpiFwhmStd" class="kpi-sub">--</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-label">Stellar Eccentricity</div>
+        <div class="kpi-value-row">
+          <span id="kpiEcc" class="kpi-value">--</span>
+          <span class="kpi-sub">&lt; 0.35 nom</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-label">Guiding Total RMS</div>
+        <div class="kpi-value-row">
+          <span id="kpiRms" class="kpi-value">--</span>
+          <span class="kpi-sub">arcsec</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-label">Ambient Temp</div>
+        <div class="kpi-value-row">
+          <span id="kpiTemp" class="kpi-value">--</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-label">Star Count (Median)</div>
+        <div class="kpi-value-row">
+          <span id="kpiStars" class="kpi-value">--</span>
+          <span class="kpi-sub">detected</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-navigation">
+      <button class="nav-tab active" data-tab="timeline">
+        <span>📈</span> Timeline &amp; PSF
+      </button>
+      <button class="nav-tab" data-tab="guiding">
+        <span>🎯</span> Mount Guiding
+      </button>
+      <button class="nav-tab" data-tab="tilt">
+        <span>📐</span> Sensor Tilt &amp; Field
+      </button>
+      <button class="nav-tab" data-tab="sky">
+        <span>🌌</span> Sky &amp; Transparency
+      </button>
+      <button class="nav-tab" data-tab="autopsy">
+        <span>🔬</span> Forensic Autopsy
+      </button>
+      <button class="nav-tab" data-tab="cli">
+        <span>💻</span> Terminal CLI
+      </button>
+    </nav>
+
+    <!-- TAB 1: Timeline & PSF -->
+    <div class="tab-pane active" id="pane-timeline">
+      <div class="chart-box">
+        <div class="chart-header">
+          <div class="chart-title">
+            <span>⏱️</span> FWHM / HFD Sequence Timeline vs Ambient Temperature
+          </div>
+          <div class="chart-legend">
+            <span>🔵 FWHM (arcsec)</span>
+            <span>🟠 Temp (°C)</span>
+            <span>🔴 Trailing / Guide Alert</span>
+          </div>
+        </div>
+        <canvas id="canvasTimeline" class="chart-canvas"></canvas>
+      </div>
+    </div>
+
+    <!-- TAB 2: Mount Guiding -->
+    <div class="tab-pane" id="pane-guiding">
+      <div class="chart-box">
+        <div class="chart-header">
+          <div class="chart-title">
+            <span>🎯</span> PHD2 Polar &amp; Cartesian Tracking Error Distribution
+          </div>
+          <div class="chart-legend">
+            <span>🟢 1σ Error Ellipse</span>
+            <span>🟡 2σ Error Ellipse</span>
+            <span>Concentric 0.5" Rings</span>
+          </div>
+        </div>
+        <canvas id="canvasGuiding" class="chart-canvas"></canvas>
+      </div>
+    </div>
+
+    <!-- TAB 3: Sensor Tilt -->
+    <div class="tab-pane" id="pane-tilt">
+      <div class="chart-box">
+        <div class="chart-header">
+          <div class="chart-title">
+            <span>📐</span> 5-Zone Focal Plane Tilt &amp; Stellar Elongation Vectors
+          </div>
+          <div class="chart-legend">
+            <span>🟢 Reference PSF</span>
+            <span>🟠 Mild Defocus (+20%)</span>
+            <span>🔴 Severe Tilt (+40%)</span>
+          </div>
+        </div>
+        <canvas id="canvasTilt" class="chart-canvas"></canvas>
+      </div>
+    </div>
+
+    <!-- TAB 4: Sky & Transparency -->
+    <div class="tab-pane" id="pane-sky">
+      <div class="chart-box">
+        <div class="chart-header">
+          <div class="chart-title">
+            <span>🌌</span> Sky Background Brightness vs Detected Star Count
+          </div>
+          <div class="chart-legend">
+            <span>🟣 Background Level (ADU)</span>
+            <span>🟡 Detected Star Count</span>
+          </div>
+        </div>
+        <canvas id="canvasSky" class="chart-canvas"></canvas>
+      </div>
+    </div>
+
+    <!-- TAB 5: Forensic Autopsy Findings -->
+    <div class="tab-pane" id="pane-autopsy">
+      <div class="autopsy-layout">
+        <div>
+          <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 14px;">Identified Pathologies &amp; Forensic Diagnoses</h2>
+          <div id="findingsList">
+            <!-- Populated by JavaScript -->
+          </div>
+        </div>
+
+        <div>
+          <div class="prescription-box">
+            <h2 class="prescription-title">
+              <span>🩺</span> Actionable Prescription Plan
+            </h2>
+            <ol id="prescriptionsList" class="prescription-list">
+              <!-- Populated by JavaScript -->
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 6: Terminal CLI -->
+    <div class="tab-pane" id="pane-cli">
+      <div class="cli-box">
+        <div class="cli-topbar">
+          <span class="cli-circle circle-red"></span>
+          <span class="cli-circle circle-yellow"></span>
+          <span class="cli-circle circle-green"></span>
+          <span class="cli-term-title">asd-session-shell — v2.0.0</span>
+        </div>
+        <div id="cliTerminal"></div>
+      </div>
+    </div>
+
+    <!-- Custom Session Upload Area -->
+    <section class="drop-zone" id="dropZone">
+      <div class="drop-icon">📁</div>
+      <div class="drop-text">Drag &amp; drop custom session file (.json or .csv) or click to browse</div>
+      <div class="drop-sub">Compatible with AstroSessionDoctor JSON exports, N.I.N.A. image session logs, and PHD2 guide logs</div>
+      <input type="file" id="fileInput" accept=".json,.csv,.txt" style="display: none;">
+    </section>
+
+    <!-- Mathematical Foundations & Forensic Methodology Section -->
+    <section class="forensics-doc">
+      <h2 class="forensics-title">📐 Mathematical &amp; Astrophotographic Forensic Methodology</h2>
+      <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 14px;">
+        AstroSessionDoctor applies rigorous optical transfer function and astrometric point spread function (PSF) models to pinpoint the root cause of image degradation:
+      </p>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+        <div class="equation-block">
+          <b>Gaussian Point Spread Function &amp; FWHM:</b><br>
+          $$\text{FWHM} = 2 \sqrt{2 \ln 2} \cdot \sigma \approx 2.35482 \cdot \sigma$$
+          Relates the standard deviation $\sigma$ of the star flux profile to the measured Full Width at Half Maximum in arcseconds.
+        </div>
+
+        <div class="equation-block">
+          <b>Stellar Eccentricity &amp; Axis Ratio:</b><br>
+          $$e = \sqrt{1 - \frac{b^2}{a^2}} = \sqrt{1 - \frac{\sigma_{\min}^2}{\sigma_{\max}^2}}$$
+          Values of $e < 0.35$ indicate circular diffraction-limited stars. $e > 0.45$ signifies tracking drift, optical coma, or severe wind buffeting.
+        </div>
+
+        <div class="equation-block">
+          <b>Total Guiding RMS (PHD2 Error Vector):</b><br>
+          $$\text{RMS}_{\text{total}} = \sqrt{\text{RMS}_{\text{RA}}^2 + \text{RMS}_{\text{Dec}}^2}$$
+          Acceptable astrophotographic guiding requires $\text{RMS}_{\text{total}} \le 0.5 \times \text{PixelScale}$.
+        </div>
+
+        <div class="equation-block">
+          <b>Critical Focus Zone (CFZ):</b><br>
+          $$\text{CFZ} = \pm 4.88 \cdot \lambda \cdot f_{\#}^2 \quad (\mu\text{m})$$
+          Calculates the depth of field before defocus induces a wave-front error exceeding $\lambda/4$ (Strehl ratio $< 0.80$).
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    AstroSessionDoctor v2.0.0 &bull; Built with precision by <a href="https://github.com/lorenhey" target="_blank" rel="noopener">Loren</a> &bull;
+    Open Source under MIT License &bull; <a href="https://github.com/lorenhey/astro-session-doctor" target="_blank" rel="noopener">GitHub Repository</a>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/asd-engine.js"></script>
+  <script src="js/asd-catalog.js"></script>
+  <script src="js/asd-plotter.js"></script>
+  <script src="js/asd-cli.js"></script>
+  <script src="js/asd-app.js"></script>
+
+</body>
+</html>
